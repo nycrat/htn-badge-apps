@@ -9,6 +9,7 @@ local ball
 local bx, by, vx, vy = 0, 0, 0, 0
 local flash_until = 0
 local sensor_missing = false
+local next_update = 0
 local status_label
 
 local function led_index()
@@ -29,6 +30,7 @@ local function show_led(r, g, b)
 end
 
 function on_enter(root)
+  badge.sys.wake_lock(true)
   bx = ARX + (ARW - SIZE) / 2
   by = ARY + (ARH - SIZE) / 2
 
@@ -43,7 +45,7 @@ function on_enter(root)
   ball = badge.ui.box(root, SIZE, SIZE)
   ball:style({ bg_color = 0x3cc8ff, radius = 14 })
 
-  status_label = badge.ui.label(root, "")
+  status_label = badge.ui.label(root, "x --   y --")
   status_label:style({ text_font = 14 })
   status_label:align("bottom_mid", 0, -34)
   local hint = badge.ui.label(root,
@@ -61,7 +63,12 @@ function on_tick()
   if x then
     if sensor_missing then
       sensor_missing = false
-      status_label:set_text("")
+      status_label:set_text("x --   y --")
+    end
+    if now >= next_update then
+      next_update = now + 100
+      status_label:set_text(string.format(
+        "x %d mg   y %d mg", math.floor(x), math.floor(y)))
     end
     local ax = -x * G
     local ay = y * G
